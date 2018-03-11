@@ -44,6 +44,7 @@
             this.tbAssemblyPath.Name = "tbAssemblyPath";
             this.tbAssemblyPath.Size = new System.Drawing.Size(965, 23);
             this.tbAssemblyPath.TabIndex = 0;
+            this.tbAssemblyPath.TextChanged += new System.EventHandler(this.tbAssemblyPath_TextChanged);
             // 
             // btOpenAssembly
             // 
@@ -64,6 +65,7 @@
             this.cmbEntryPoint.Name = "cmbEntryPoint";
             this.cmbEntryPoint.Size = new System.Drawing.Size(718, 25);
             this.cmbEntryPoint.TabIndex = 2;
+            this.cmbEntryPoint.SelectedIndexChanged += new System.EventHandler(this.cmbEntryPoint_SelectedIndexChanged);
             // 
             // btRebuild
             // 
@@ -85,6 +87,7 @@
             this.cmbManifestModuleKind.Name = "cmbManifestModuleKind";
             this.cmbManifestModuleKind.Size = new System.Drawing.Size(124, 25);
             this.cmbManifestModuleKind.TabIndex = 4;
+            this.cmbManifestModuleKind.SelectedIndexChanged += new System.EventHandler(this.cmbManifestModuleKind_SelectedIndexChanged);
             // 
             // chkNoStaticConstructor
             // 

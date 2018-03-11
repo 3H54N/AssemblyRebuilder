@@ -21,14 +21,9 @@ namespace AssemblyRebuilder
         public MainForm()
         {
             InitializeComponent();
-            cmbManifestModuleKind.SelectedIndexChanged += (object sender, EventArgs e) => { ManifestModuleKind = (ModuleKind)cmbManifestModuleKind.SelectedItem; LoadAllEntryPoints(); };
             Text = $"{Application.ProductName} v{Application.ProductVersion}";
-            tbAssemblyPath.DataBindings.Add("Text", this, "AssemblyPath", true, DataSourceUpdateMode.OnPropertyChanged);
-            //cmbEntryPoint.DataBindings.Add("SelectedItem", this, "ManagedEntryPoint", true, DataSourceUpdateMode.OnPropertyChanged);
-            cmbEntryPoint.SelectedIndexChanged += (object sender, EventArgs e) => ManagedEntryPoint = ((MethodDefWrapper)cmbEntryPoint.SelectedItem).MethodDefine;
             for (int i = 0; i < 4; i++)
                 cmbManifestModuleKind.Items.Add((ModuleKind)i);
-            //cmbManifestModuleKind.DataBindings.Add("SelectedItem", this, "ManifestModuleKind", true, DataSourceUpdateMode.OnPropertyChanged);
         }
 
         public MainForm(string assemblyPath) : this()
@@ -46,22 +41,33 @@ namespace AssemblyRebuilder
             LoadAssembly();
         }
 
-        private void chkNoStaticConstructor_CheckedChanged(object sender, EventArgs e)
+        private void tbAssemblyPath_TextChanged(object sender, EventArgs e) => AssemblyPath = tbAssemblyPath.Text;
+
+        private void chkNoStaticConstructor_CheckedChanged(object sender, EventArgs e) => LoadAllEntryPoints();
+
+        private void cmbEntryPoint_SelectedIndexChanged(object sender, EventArgs e) => ManagedEntryPoint = ((MethodDefWrapper)cmbEntryPoint.SelectedItem).MethodDefine;
+
+        private void cmbManifestModuleKind_SelectedIndexChanged(object sender, EventArgs e)
         {
-            LoadAllEntryPoints();
+            bool isExecutable;
+
+            ManifestModuleKind = (ModuleKind)cmbManifestModuleKind.SelectedItem;
+            isExecutable = MustHasManagedEntryPoint();
+            cmbEntryPoint.Enabled = isExecutable;
+            chkNoStaticConstructor.Enabled = isExecutable;
+            if (isExecutable)
+                LoadAllEntryPoints();
+            else
+                cmbEntryPoint.Items.Clear();
         }
 
-        private void btRebuild_Click(object sender, EventArgs e)
-        {
-            Rebuild();
-        }
+        private void btRebuild_Click(object sender, EventArgs e) => Rebuild();
 
         private void LoadAssembly()
         {
             try
             {
                 ManifestModule = ModuleDefMD.Load(AssemblyPath);
-                //cmbEntryPoint.Enabled = true; 被cmbEntryPoint.Enabled = MustHasManagedEntryPoint();替代
                 chkNoStaticConstructor.Enabled = true;
                 cmbManifestModuleKind.Enabled = true;
                 btRebuild.Enabled = true;
@@ -85,9 +91,6 @@ namespace AssemblyRebuilder
             MethodSig methodSig;
 
             cmbEntryPoint.Items.Clear();
-            cmbEntryPoint.Enabled = MustHasManagedEntryPoint();
-            if (!cmbEntryPoint.Enabled)
-                return;
             foreach (TypeDef typeDef in ManifestModule.GetTypes())
                 foreach (MethodDef methodDef in typeDef.Methods)
                 {
@@ -121,9 +124,7 @@ namespace AssemblyRebuilder
                     cmbEntryPoint.Items.Add((MethodDefWrapper)methodDef);
                 }
             ManagedEntryPoint = ManifestModule.ManagedEntryPoint;
-            if (ManagedEntryPoint == null)
-                MessageBox.Show("检测到无效的入口点，请在下拉列表中重新选择一个入口点！", ProgramName);
-            else
+            if (ManagedEntryPoint != null)
                 cmbEntryPoint.SelectedItem = ManagedEntryPoint;
         }
 
@@ -133,10 +134,7 @@ namespace AssemblyRebuilder
             cmbManifestModuleKind.SelectedItem = ManifestModuleKind;
         }
 
-        private bool MustHasManagedEntryPoint()
-        {
-            return ManifestModuleKind != ModuleKind.Dll && ManifestModuleKind != ModuleKind.NetModule;
-        }
+        private bool MustHasManagedEntryPoint() => ManifestModuleKind != ModuleKind.Dll && ManifestModuleKind != ModuleKind.NetModule;
 
         private void Rebuild()
         {
