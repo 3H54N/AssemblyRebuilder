@@ -32,6 +32,14 @@ namespace AssemblyRebuilder
             LoadAssembly();
         }
 
+        private void MainForm_DragEnter(object sender, DragEventArgs e) => e.Effect = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy : DragDropEffects.None;
+
+        private void MainForm_DragDrop(object sender, DragEventArgs e)
+        {
+            tbAssemblyPath.Text = ((string[])e.Data.GetData(DataFormats.FileDrop))[0];
+            LoadAssembly();
+        }
+
         private void btOpenAssembly_Click(object sender, EventArgs e)
         {
             if (odlgSelectAssembly.ShowDialog() == DialogResult.OK)
@@ -45,7 +53,7 @@ namespace AssemblyRebuilder
 
         private void chkNoStaticConstructor_CheckedChanged(object sender, EventArgs e) => LoadAllEntryPoints();
 
-        private void cmbEntryPoint_SelectedIndexChanged(object sender, EventArgs e) => ManagedEntryPoint = ((MethodDefWrapper)cmbEntryPoint.SelectedItem).MethodDefine;
+        private void cmbEntryPoint_SelectedIndexChanged(object sender, EventArgs e) => ManagedEntryPoint = ((IManagedEntryPointWrapper)cmbEntryPoint.SelectedItem).ManagedEntryPoint;
 
         private void cmbManifestModuleKind_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -121,11 +129,13 @@ namespace AssemblyRebuilder
                         default:
                             continue;
                     }
-                    cmbEntryPoint.Items.Add((MethodDefWrapper)methodDef);
+                    cmbEntryPoint.Items.Add(new IManagedEntryPointWrapper(methodDef));
                 }
             ManagedEntryPoint = ManifestModule.ManagedEntryPoint;
             if (ManagedEntryPoint != null)
-                cmbEntryPoint.SelectedItem = ManagedEntryPoint;
+                for (int i = 0; i < cmbEntryPoint.Items.Count; i++)
+                    if (((IManagedEntryPointWrapper)cmbEntryPoint.Items[i]).ManagedEntryPoint.MDToken.Raw == ManagedEntryPoint.MDToken.Raw)
+                        cmbEntryPoint.SelectedIndex = i;
         }
 
         private void LoadManifestModuleKind()
