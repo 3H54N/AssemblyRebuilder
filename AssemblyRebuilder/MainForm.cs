@@ -34,8 +34,8 @@ namespace AssemblyRebuilder
 
         private void btOpenAssembly_Click(object sender, EventArgs e)
         {
-            if (ofdOpenAssembly.ShowDialog() == DialogResult.OK)
-                tbAssemblyPath.Text = ofdOpenAssembly.FileName;
+            if (odlgSelectAssembly.ShowDialog() == DialogResult.OK)
+                tbAssemblyPath.Text = odlgSelectAssembly.FileName;
             else
                 return;
             LoadAssembly();

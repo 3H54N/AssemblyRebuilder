@@ -28,9 +28,10 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.tbAssemblyPath = new System.Windows.Forms.TextBox();
             this.btOpenAssembly = new System.Windows.Forms.Button();
-            this.ofdOpenAssembly = new System.Windows.Forms.OpenFileDialog();
+            this.odlgSelectAssembly = new System.Windows.Forms.OpenFileDialog();
             this.cmbEntryPoint = new System.Windows.Forms.ComboBox();
             this.btRebuild = new System.Windows.Forms.Button();
             this.cmbManifestModuleKind = new System.Windows.Forms.ComboBox();
@@ -116,6 +117,7 @@
             this.Controls.Add(this.tbAssemblyPath);
             this.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.MaximizeBox = false;
             this.Name = "MainForm";
@@ -129,7 +131,7 @@
 
         private System.Windows.Forms.TextBox tbAssemblyPath;
         private System.Windows.Forms.Button btOpenAssembly;
-        private System.Windows.Forms.OpenFileDialog ofdOpenAssembly;
+        private System.Windows.Forms.OpenFileDialog odlgSelectAssembly;
         private System.Windows.Forms.ComboBox cmbEntryPoint;
         private System.Windows.Forms.Button btRebuild;
         private System.Windows.Forms.ComboBox cmbManifestModuleKind;
