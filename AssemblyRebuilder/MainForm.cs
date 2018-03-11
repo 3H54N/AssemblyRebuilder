@@ -103,11 +103,11 @@ namespace AssemblyRebuilder
                 foreach (MethodDef methodDef in typeDef.Methods)
                 {
                     if (!methodDef.IsStatic)
-                        break;
+                        continue;
                     if (methodDef.IsGetter || methodDef.IsSetter)
-                        break;
+                        continue;
                     if (chkNoStaticConstructor.Checked && methodDef.IsStaticConstructor)
-                        break;
+                        continue;
                     methodSig = (MethodSig)methodDef.Signature;
                     switch (methodSig.Params.Count)
                     {
