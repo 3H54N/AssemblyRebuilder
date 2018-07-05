@@ -30,7 +30,7 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.tbAssemblyPath = new System.Windows.Forms.TextBox();
-            this.btOpenAssembly = new System.Windows.Forms.Button();
+            this.btSelectAssembly = new System.Windows.Forms.Button();
             this.odlgSelectAssembly = new System.Windows.Forms.OpenFileDialog();
             this.cmbEntryPoint = new System.Windows.Forms.ComboBox();
             this.btRebuild = new System.Windows.Forms.Button();
@@ -47,15 +47,15 @@
             this.tbAssemblyPath.TabIndex = 0;
             this.tbAssemblyPath.TextChanged += new System.EventHandler(this.tbAssemblyPath_TextChanged);
             // 
-            // btOpenAssembly
+            // btSelectAssembly
             // 
-            this.btOpenAssembly.Location = new System.Drawing.Point(983, 13);
-            this.btOpenAssembly.Name = "btOpenAssembly";
-            this.btOpenAssembly.Size = new System.Drawing.Size(98, 23);
-            this.btOpenAssembly.TabIndex = 1;
-            this.btOpenAssembly.Text = "选择程序集...";
-            this.btOpenAssembly.UseVisualStyleBackColor = true;
-            this.btOpenAssembly.Click += new System.EventHandler(this.btOpenAssembly_Click);
+            this.btSelectAssembly.Location = new System.Drawing.Point(983, 13);
+            this.btSelectAssembly.Name = "btSelectAssembly";
+            this.btSelectAssembly.Size = new System.Drawing.Size(98, 23);
+            this.btSelectAssembly.TabIndex = 1;
+            this.btSelectAssembly.Text = "选择程序集...";
+            this.btSelectAssembly.UseVisualStyleBackColor = true;
+            this.btSelectAssembly.Click += new System.EventHandler(this.btSelectAssembly_Click);
             // 
             // cmbEntryPoint
             // 
@@ -114,7 +114,7 @@
             this.Controls.Add(this.cmbManifestModuleKind);
             this.Controls.Add(this.btRebuild);
             this.Controls.Add(this.cmbEntryPoint);
-            this.Controls.Add(this.btOpenAssembly);
+            this.Controls.Add(this.btSelectAssembly);
             this.Controls.Add(this.tbAssemblyPath);
             this.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
@@ -133,7 +133,7 @@
         #endregion
 
         private System.Windows.Forms.TextBox tbAssemblyPath;
-        private System.Windows.Forms.Button btOpenAssembly;
+        private System.Windows.Forms.Button btSelectAssembly;
         private System.Windows.Forms.OpenFileDialog odlgSelectAssembly;
         private System.Windows.Forms.ComboBox cmbEntryPoint;
         private System.Windows.Forms.Button btRebuild;

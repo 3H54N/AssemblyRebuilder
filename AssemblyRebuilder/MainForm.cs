@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 using dnlib.DotNet;
+using dnlib.DotNet.Writer;
 
 namespace AssemblyRebuilder
 {
@@ -40,7 +41,7 @@ namespace AssemblyRebuilder
             LoadAssembly();
         }
 
-        private void btOpenAssembly_Click(object sender, EventArgs e)
+        private void btSelectAssembly_Click(object sender, EventArgs e)
         {
             if (odlgSelectAssembly.ShowDialog() == DialogResult.OK)
                 tbAssemblyPath.Text = odlgSelectAssembly.FileName;
@@ -159,7 +160,7 @@ namespace AssemblyRebuilder
             newAssemblyPath = $"{newAssemblyPath}_Rebuilded{extension}";
             ManifestModule.ManagedEntryPoint = ManagedEntryPoint;
             ManifestModule.Kind = ManifestModuleKind;
-            ManifestModule.Write(newAssemblyPath);
+            ManifestModule.Write(newAssemblyPath, new ModuleWriterOptions(ManifestModule) { MetaDataOptions = new MetaDataOptions(MetaDataFlags.KeepOldMaxStack) });
             MessageBox.Show("重建成功", ProgramName);
         }
     }
