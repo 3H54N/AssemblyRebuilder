@@ -1,167 +1,147 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 using dnlib.DotNet;
 using dnlib.DotNet.Writer;
 
-namespace AssemblyRebuilder
-{
-    internal partial class MainForm : Form
-    {
-        private static readonly string ProgramName = Assembly.GetExecutingAssembly().GetName().Name;
+namespace AssemblyRebuilder {
+	internal partial class MainForm : Form {
+		private static readonly string ProgramName = Assembly.GetExecutingAssembly().GetName().Name;
 
-        public string AssemblyPath { get; set; }
+		public string AssemblyPath { get; set; }
 
-        public ModuleDef ManifestModule { get; set; }
+		public ModuleDef ManifestModule { get; set; }
 
-        public IManagedEntryPoint ManagedEntryPoint { get; set; }
+		public IManagedEntryPoint ManagedEntryPoint { get; set; }
 
-        public ModuleKind ManifestModuleKind { get; set; }
+		public ModuleKind ManifestModuleKind { get; set; }
 
-        public MainForm()
-        {
-            InitializeComponent();
-            Text = $"{Application.ProductName} v{Application.ProductVersion}";
-            for (int i = 0; i < 4; i++)
-                cmbManifestModuleKind.Items.Add((ModuleKind)i);
-        }
+		public MainForm() {
+			InitializeComponent();
+			Text = GetAssemblyAttribute<AssemblyProductAttribute>().Product + " v" + Assembly.GetExecutingAssembly().GetName().Version.ToString() + " by " + GetAssemblyAttribute<AssemblyCopyrightAttribute>().Copyright.Substring(17);
+			for (int i = 0; i < 4; i++)
+				cmbManifestModuleKind.Items.Add((ModuleKind)i);
+		}
 
-        public MainForm(string assemblyPath) : this()
-        {
-            AssemblyPath = Path.GetFullPath(assemblyPath);
-            LoadAssembly();
-        }
+		public MainForm(string assemblyPath) : this() {
+			AssemblyPath = Path.GetFullPath(assemblyPath);
+			LoadAssembly();
+		}
 
-        private void MainForm_DragEnter(object sender, DragEventArgs e) => e.Effect = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy : DragDropEffects.None;
+		private static T GetAssemblyAttribute<T>() => (T)Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(T), false)[0];
 
-        private void MainForm_DragDrop(object sender, DragEventArgs e)
-        {
-            tbAssemblyPath.Text = ((string[])e.Data.GetData(DataFormats.FileDrop))[0];
-            LoadAssembly();
-        }
+		private void MainForm_DragEnter(object sender, DragEventArgs e) => e.Effect = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy : DragDropEffects.None;
 
-        private void btSelectAssembly_Click(object sender, EventArgs e)
-        {
-            if (odlgSelectAssembly.ShowDialog() == DialogResult.OK)
-                tbAssemblyPath.Text = odlgSelectAssembly.FileName;
-            else
-                return;
-            LoadAssembly();
-        }
+		private void MainForm_DragDrop(object sender, DragEventArgs e) {
+			tbAssemblyPath.Text = ((string[])e.Data.GetData(DataFormats.FileDrop))[0];
+			LoadAssembly();
+		}
 
-        private void tbAssemblyPath_TextChanged(object sender, EventArgs e) => AssemblyPath = tbAssemblyPath.Text;
+		private void btSelectAssembly_Click(object sender, EventArgs e) {
+			if (odlgSelectAssembly.ShowDialog() == DialogResult.OK)
+				tbAssemblyPath.Text = odlgSelectAssembly.FileName;
+			else
+				return;
+			LoadAssembly();
+		}
 
-        private void chkNoStaticConstructor_CheckedChanged(object sender, EventArgs e) => LoadAllEntryPoints();
+		private void tbAssemblyPath_TextChanged(object sender, EventArgs e) => AssemblyPath = tbAssemblyPath.Text;
 
-        private void cmbEntryPoint_SelectedIndexChanged(object sender, EventArgs e) => ManagedEntryPoint = ((IManagedEntryPointWrapper)cmbEntryPoint.SelectedItem).ManagedEntryPoint;
+		private void chkNoStaticConstructor_CheckedChanged(object sender, EventArgs e) => LoadAllEntryPoints();
 
-        private void cmbManifestModuleKind_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            bool isExecutable;
+		private void cmbEntryPoint_SelectedIndexChanged(object sender, EventArgs e) => ManagedEntryPoint = ((IManagedEntryPointWrapper)cmbEntryPoint.SelectedItem).ManagedEntryPoint;
 
-            ManifestModuleKind = (ModuleKind)cmbManifestModuleKind.SelectedItem;
-            isExecutable = MustHasManagedEntryPoint();
-            cmbEntryPoint.Enabled = isExecutable;
-            chkNoStaticConstructor.Enabled = isExecutable;
-            if (isExecutable)
-                LoadAllEntryPoints();
-            else
-                cmbEntryPoint.Items.Clear();
-        }
+		private void cmbManifestModuleKind_SelectedIndexChanged(object sender, EventArgs e) {
+			bool isExecutable;
 
-        private void btRebuild_Click(object sender, EventArgs e) => Rebuild();
+			ManifestModuleKind = (ModuleKind)cmbManifestModuleKind.SelectedItem;
+			isExecutable = MustHasManagedEntryPoint();
+			cmbEntryPoint.Enabled = isExecutable;
+			chkNoStaticConstructor.Enabled = isExecutable;
+			if (isExecutable)
+				LoadAllEntryPoints();
+			else
+				cmbEntryPoint.Items.Clear();
+		}
 
-        private void LoadAssembly()
-        {
-            try
-            {
-                ManifestModule = ModuleDefMD.Load(AssemblyPath);
-                chkNoStaticConstructor.Enabled = true;
-                cmbManifestModuleKind.Enabled = true;
-                btRebuild.Enabled = true;
-            }
-            catch
-            {
-                MessageBox.Show("无效程序集，请重新选定路径", ProgramName);
-                ManifestModule = null;
-                cmbEntryPoint.Enabled = false;
-                chkNoStaticConstructor.Enabled = false;
-                cmbManifestModuleKind.Enabled = false;
-                btRebuild.Enabled = false;
-                return;
-            }
-            LoadManifestModuleKind();
-            LoadAllEntryPoints();
-        }
+		private void btRebuild_Click(object sender, EventArgs e) => Rebuild();
 
-        private void LoadAllEntryPoints()
-        {
-            MethodSig methodSig;
+		private void LoadAssembly() {
+			try {
+				ManifestModule = ModuleDefMD.Load(AssemblyPath);
+				chkNoStaticConstructor.Enabled = true;
+				cmbManifestModuleKind.Enabled = true;
+				btRebuild.Enabled = true;
+			}
+			catch {
+				MessageBox.Show("无效程序集，请重新选定路径", ProgramName);
+				ManifestModule = null;
+				cmbEntryPoint.Enabled = false;
+				chkNoStaticConstructor.Enabled = false;
+				cmbManifestModuleKind.Enabled = false;
+				btRebuild.Enabled = false;
+				return;
+			}
+			LoadManifestModuleKind();
+			LoadAllEntryPoints();
+		}
 
-            cmbEntryPoint.Items.Clear();
-            foreach (TypeDef typeDef in ManifestModule.GetTypes())
-                foreach (MethodDef methodDef in typeDef.Methods)
-                {
-                    if (!methodDef.IsStatic)
-                        continue;
-                    if (methodDef.IsGetter || methodDef.IsSetter)
-                        continue;
-                    if (chkNoStaticConstructor.Checked && methodDef.IsStaticConstructor)
-                        continue;
-                    methodSig = (MethodSig)methodDef.Signature;
-                    switch (methodSig.Params.Count)
-                    {
-                        case 0:
-                            break;
-                        case 1:
-                            if (methodSig.Params[0].FullName == "System.String[]")
-                                break;
-                            else
-                                continue;
-                        default:
-                            continue;
-                    }
-                    switch (methodSig.RetType.FullName)
-                    {
-                        case "System.Void":
-                        case "System.Int32":
-                            break;
-                        default:
-                            continue;
-                    }
-                    cmbEntryPoint.Items.Add(new IManagedEntryPointWrapper(methodDef));
-                }
-            ManagedEntryPoint = ManifestModule.ManagedEntryPoint;
-            if (ManagedEntryPoint != null)
-                for (int i = 0; i < cmbEntryPoint.Items.Count; i++)
-                    if (((IManagedEntryPointWrapper)cmbEntryPoint.Items[i]).ManagedEntryPoint.MDToken.Raw == ManagedEntryPoint.MDToken.Raw)
-                        cmbEntryPoint.SelectedIndex = i;
-        }
+		private void LoadAllEntryPoints() {
+			MethodSig methodSig;
 
-        private void LoadManifestModuleKind()
-        {
-            ManifestModuleKind = ManifestModule.Kind;
-            cmbManifestModuleKind.SelectedItem = ManifestModuleKind;
-        }
+			cmbEntryPoint.Items.Clear();
+			foreach (TypeDef typeDef in ManifestModule.GetTypes())
+				foreach (MethodDef methodDef in typeDef.Methods) {
+					if (!methodDef.IsStatic)
+						continue;
+					if (methodDef.IsGetter || methodDef.IsSetter)
+						continue;
+					if (chkNoStaticConstructor.Checked && methodDef.IsStaticConstructor)
+						continue;
+					methodSig = (MethodSig)methodDef.Signature;
+					switch (methodSig.Params.Count) {
+					case 0:
+						break;
+					case 1:
+						if (methodSig.Params[0].FullName == "System.String[]")
+							break;
+						else
+							continue;
+					default:
+						continue;
+					}
+					switch (methodSig.RetType.FullName) {
+					case "System.Void":
+					case "System.Int32":
+						break;
+					default:
+						continue;
+					}
+					cmbEntryPoint.Items.Add(new IManagedEntryPointWrapper(methodDef));
+				}
+			ManagedEntryPoint = ManifestModule.ManagedEntryPoint;
+			if (ManagedEntryPoint != null)
+				for (int i = 0; i < cmbEntryPoint.Items.Count; i++)
+					if (((IManagedEntryPointWrapper)cmbEntryPoint.Items[i]).ManagedEntryPoint.MDToken.Raw == ManagedEntryPoint.MDToken.Raw)
+						cmbEntryPoint.SelectedIndex = i;
+		}
 
-        private bool MustHasManagedEntryPoint() => ManifestModuleKind != ModuleKind.Dll && ManifestModuleKind != ModuleKind.NetModule;
+		private void LoadManifestModuleKind() {
+			ManifestModuleKind = ManifestModule.Kind;
+			cmbManifestModuleKind.SelectedItem = ManifestModuleKind;
+		}
 
-        private void Rebuild()
-        {
-            if (MustHasManagedEntryPoint() && ManagedEntryPoint == null && MessageBox.Show("未选择入口点，是否重建？", ProgramName, MessageBoxButtons.YesNo) != DialogResult.Yes)
-                return;
+		private bool MustHasManagedEntryPoint() => ManifestModuleKind != ModuleKind.Dll && ManifestModuleKind != ModuleKind.NetModule;
 
-            string extension;
-            string newAssemblyPath;
+		private void Rebuild() {
+			if (MustHasManagedEntryPoint() && ManagedEntryPoint == null && MessageBox.Show("未选择入口点，是否重建？", ProgramName, MessageBoxButtons.YesNo) != DialogResult.Yes)
+				return;
 
-            extension = Path.GetExtension(AssemblyPath);
-            newAssemblyPath = AssemblyPath.Substring(0, AssemblyPath.Length - extension.Length);
-            newAssemblyPath = $"{newAssemblyPath}_Rebuilded{extension}";
-            ManifestModule.ManagedEntryPoint = ManagedEntryPoint;
-            ManifestModule.Kind = ManifestModuleKind;
-            ManifestModule.Write(newAssemblyPath, new ModuleWriterOptions(ManifestModule) { MetaDataOptions = new MetaDataOptions(MetaDataFlags.KeepOldMaxStack) });
-            MessageBox.Show("重建成功", ProgramName);
-        }
-    }
+			ManifestModule.ManagedEntryPoint = ManagedEntryPoint;
+			ManifestModule.Kind = ManifestModuleKind;
+			ManifestModule.Write(Path.Combine(Path.GetDirectoryName(AssemblyPath), Path.GetFileNameWithoutExtension(AssemblyPath) + ".rb" + Path.GetExtension(AssemblyPath)), new ModuleWriterOptions(ManifestModule) { MetaDataOptions = new MetaDataOptions(MetaDataFlags.KeepOldMaxStack) });
+			MessageBox.Show("重建成功", ProgramName);
+		}
+	}
 }
